@@ -225,6 +225,18 @@
       user-select: none;
     }
     .multi-select-option:hover { background: #f5f5f5; }
+    .multi-select-group {
+      padding: 10px 16px 4px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--faint);
+      position: sticky;
+      top: 0;
+      background: #fff;
+    }
+    .multi-select-group:first-child { padding-top: 6px; }
     .multi-select-option input[type="checkbox"] {
       width: 16px; height: 16px;
       flex-shrink: 0;
@@ -393,19 +405,10 @@
             <div class="slider-group">
               <div class="slider-label">
                 <span class="label-text">Invoices / month</span>
-                <span class="slider-value" id="invoices-value">5,000</span>
+                <span class="slider-value" id="invoices-value">2,000</span>
               </div>
-              <input type="range" id="invoices" min="0" max="100000" step="500" value="5000" />
-              <div class="slider-range"><span>0</span><span>100,000+</span></div>
-            </div>
-
-            <div class="slider-group">
-              <div class="slider-label">
-                <span class="label-text">Transactions / month</span>
-                <span class="slider-value" id="transactions-value">2,000</span>
-              </div>
-              <input type="range" id="transactions" min="0" max="20000" step="100" value="2000" />
-              <div class="slider-range"><span>0</span><span>20,000+</span></div>
+              <input type="range" id="invoices" min="0" max="10000" step="100" value="2000" />
+              <div class="slider-range"><span>0</span><span>10,000+</span></div>
             </div>
 
             <div class="slider-group">
@@ -431,6 +434,7 @@
                   <div class="multi-select-list" id="stackList"></div>
                 </div>
               </div>
+              <input type="text" id="stackOther" placeholder="Other tools — not listed above" style="margin-top: 10px;" />
               <div class="error-msg">Please select at least one option.</div>
             </div>
           </div>
@@ -448,7 +452,7 @@
                       White-glove onboarding
                       <span class="setup-card-badge">Free</span>
                     </div>
-                    <div class="setup-card-desc">We handle the heavy lifting — data import, account setup, and team walkthrough. No extra cost.</div>
+                    <div class="setup-card-desc">We connect your accounting tool, configure your booking rules, and train the system on your invoices. You review the results — we handle everything else.</div>
                   </div>
                 </label>
 
@@ -456,9 +460,9 @@
                   <input type="checkbox" id="fde" />
                   <div class="setup-card-body">
                     <div class="setup-card-title">
-                      Forward-deployed engineer
+                      Finance AI day
                     </div>
-                    <div class="setup-card-desc">A 1-day session where one of our engineers sets up your data, rules, and Cortena with you — so your team can run it independently.</div>
+                    <div class="setup-card-desc">We spend a day with your team setting up Cortena on your real invoices and workflows. Your team leaves knowing exactly how to run finance operations with AI — not just how to use a tool.</div>
                   </div>
                 </label>
               </div>
@@ -560,6 +564,11 @@
           </div>
         </div>
 
+        <div class="field message-section">
+          <label for="message">Additional information</label>
+          <textarea id="message" placeholder="Anything else we should know — current setup, volumes, specific requirements, timelines."></textarea>
+        </div>
+
         <div class="submit-row">
           <button type="submit" class="submit-btn" id="submitBtn">Request quote</button>
         </div>
@@ -582,8 +591,7 @@
   <script>
     // --- Slider value display + fill ---
     const sliders = [
-      { id: 'invoices', valueId: 'invoices-value', format: v => Number(v).toLocaleString() + (v >= 100000 ? '+' : '') },
-      { id: 'transactions', valueId: 'transactions-value', format: v => Number(v).toLocaleString() + (v >= 20000 ? '+' : '') },
+      { id: 'invoices', valueId: 'invoices-value', format: v => Number(v).toLocaleString() + (v >= 10000 ? '+' : '') },
       { id: 'entities', valueId: 'entities-value', format: v => v + (v >= 100 ? '+' : '') },
     ];
     sliders.forEach(({ id, valueId, format }) => {
@@ -598,15 +606,27 @@
       update();
     });
 
-    // --- Financial stack multi-select ---
-    const stackOptions = [
-      'Adyen', 'ABN AMRO', 'Argenta', 'Belfius', 'BNP Paribas Fortis', 'bunq',
-      'Candis.io', 'Commerzbank', 'DATEV', 'Deutsche Bank', 'DKB', 'Exact Online',
-      'HubSpot', 'HypoVereinsbank', 'ING (NL)', 'ING Belgium', 'ING-DiBa',
-      'KBC', 'Knab', 'Mollie', 'N26', 'Odoo', 'Oracle NetSuite', 'PayPal',
-      'Pleo', 'Postbank', 'Qonto', 'Rabobank', 'Revolut', 'Sage', 'SAP', 'SNS',
-      'Sparkasse', 'Spendesk', 'Stripe', 'Triodos', 'Volksbank', 'Xero',
-      'Zoho Books', 'Other'
+    // --- Financial stack multi-select (grouped) ---
+    const stackGroups = [
+      { label: 'Accounting / ERP', options: [
+        'DATEV Unternehmen Online', 'DATEV Rechnungswesen', 'Exact Online', 'Twinfield',
+        'Odoo', 'AFAS', 'SnelStart', 'Visma', 'Yuki', 'SAP', 'SAP Business One',
+        'Microsoft Dynamics 365', 'Oracle NetSuite', 'Oracle Fusion', 'Lexware', 'WeClapp'
+      ]},
+      { label: 'Spend Tools', options: [
+        'Moss', 'Pleo', 'Spendesk', 'Rydoo', 'Circula', 'Pliant', 'Candis', 'Soldo'
+      ]},
+      { label: 'Banks', options: [
+        'Commerzbank', 'Deutsche Bank', 'Sparkasse', 'Qonto', 'N26 Business',
+        'Revolut Business', 'ING', 'Rabobank', 'ABN AMRO', 'Bunq'
+      ]},
+      { label: 'CRM / Rev Ops', options: [
+        'HubSpot', 'Salesforce', 'Pipedrive', 'Monday CRM', 'Zoho', 'Freshsales',
+        'Stripe', 'Chargebee', 'Easybill'
+      ]},
+      { label: 'Treasury / FP&A', options: [
+        'Embat', 'Agicap', 'Lucanet', 'Vena', 'Pigment', 'Datarails', 'Runway'
+      ]},
     ];
     const selectedStack = new Set();
     const trigger = document.getElementById('stackTrigger');
@@ -618,33 +638,45 @@
 
     function renderList(filter = '') {
       const q = filter.trim().toLowerCase();
-      const filtered = stackOptions.filter(o => o.toLowerCase().includes(q));
       list.innerHTML = '';
-      if (filtered.length === 0) {
+      let anyShown = false;
+
+      stackGroups.forEach(group => {
+        const matches = group.options.filter(o => o.toLowerCase().includes(q));
+        if (matches.length === 0) return;
+        anyShown = true;
+
+        const header = document.createElement('div');
+        header.className = 'multi-select-group';
+        header.textContent = group.label;
+        list.appendChild(header);
+
+        matches.forEach(opt => {
+          const row = document.createElement('label');
+          row.className = 'multi-select-option';
+          const cb = document.createElement('input');
+          cb.type = 'checkbox';
+          cb.checked = selectedStack.has(opt);
+          cb.addEventListener('change', () => {
+            if (cb.checked) selectedStack.add(opt);
+            else selectedStack.delete(opt);
+            renderTrigger();
+            if (selectedStack.size > 0) stackField.classList.remove('error');
+          });
+          const span = document.createElement('span');
+          span.textContent = opt;
+          row.appendChild(cb);
+          row.appendChild(span);
+          list.appendChild(row);
+        });
+      });
+
+      if (!anyShown) {
         const empty = document.createElement('div');
         empty.className = 'multi-select-empty';
         empty.textContent = 'No matches';
         list.appendChild(empty);
-        return;
       }
-      filtered.forEach(opt => {
-        const row = document.createElement('label');
-        row.className = 'multi-select-option';
-        const cb = document.createElement('input');
-        cb.type = 'checkbox';
-        cb.checked = selectedStack.has(opt);
-        cb.addEventListener('change', () => {
-          if (cb.checked) selectedStack.add(opt);
-          else selectedStack.delete(opt);
-          renderTrigger();
-          if (selectedStack.size > 0) stackField.classList.remove('error');
-        });
-        const span = document.createElement('span');
-        span.textContent = opt;
-        row.appendChild(cb);
-        row.appendChild(span);
-        list.appendChild(row);
-      });
     }
 
     function renderTrigger() {
@@ -693,6 +725,9 @@
       }
     });
     search.addEventListener('input', () => renderList(search.value));
+    document.getElementById('stackOther').addEventListener('input', (e) => {
+      if (e.target.value.trim() !== '') stackField.classList.remove('error');
+    });
     renderList();
 
     // --- Setup card visual state ---
@@ -730,7 +765,7 @@
         setFieldError(id, !valid);
         if (!valid) ok = false;
       });
-      if (selectedStack.size === 0) {
+      if (selectedStack.size === 0 && document.getElementById('stackOther').value.trim() === '') {
         stackField.classList.add('error');
         ok = false;
       }
@@ -748,10 +783,10 @@
       const payload = {
         sizing: {
           invoicesPerMonth: Number(document.getElementById('invoices').value),
-          transactionsPerMonth: Number(document.getElementById('transactions').value),
           entities: Number(document.getElementById('entities').value),
         },
         financialStack: Array.from(selectedStack),
+        otherTools: document.getElementById('stackOther').value.trim(),
         contact: {
           firstName: document.getElementById('firstName').value.trim(),
           lastName: document.getElementById('lastName').value.trim(),
@@ -766,8 +801,9 @@
         },
         setup: {
           whiteGloveOnboarding: document.getElementById('whiteGlove').checked,
-          forwardDeployedEngineer: document.getElementById('fde').checked,
+          financeAiDay: document.getElementById('fde').checked,
         },
+        message: document.getElementById('message').value.trim(),
         submittedAt: new Date().toISOString(),
       };
 
