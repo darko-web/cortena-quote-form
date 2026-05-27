@@ -32,17 +32,13 @@
     }
 
     .form-card {
-      background: var(--bg-card);
+      background: #fff;
       border-radius: 12px;
       padding: 48px;
       max-width: 980px;
       width: 100%;
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
     }
-
-    .form-header { text-align: center; margin-bottom: 36px; }
-    .form-header h1 { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
-    .form-header p { font-size: 14px; color: var(--muted); }
 
     .form-grid {
       display: grid;
@@ -384,17 +380,12 @@
       .form-grid { grid-template-columns: 1fr; gap: 32px; }
       .setup-options { grid-template-columns: 1fr; }
       .field-row { grid-template-columns: 1fr; }
-      .form-header h1 { font-size: 22px; }
     }
   </style>
 </head>
 <body>
   <div class="form-card">
     <div id="formView">
-      <div class="form-header">
-        <h1>Request a Cortena quote</h1>
-        <p>Tell us about your business and we'll get back to you with a tailored proposal.</p>
-      </div>
 
       <form id="quoteForm" novalidate>
         <div class="form-grid">
@@ -425,7 +416,7 @@
               <p class="field-hint">Select all the tools or banks you're working with.</p>
               <div class="multi-select" id="stackSelect">
                 <button type="button" class="multi-select-trigger placeholder" id="stackTrigger" aria-haspopup="listbox" aria-expanded="false">
-                  <span id="stackTriggerLabel">Select your tools, banks &amp; PSPs</span>
+                  <span id="stackTriggerLabel">Select the tools you use</span>
                 </button>
                 <div class="multi-select-panel" id="stackPanel">
                   <div class="multi-select-search">
@@ -687,7 +678,7 @@
         trigger.classList.remove('has-selections');
         const span = document.createElement('span');
         span.id = 'stackTriggerLabel';
-        span.textContent = 'Select your tools, banks & PSPs';
+        span.textContent = 'Select the tools you use';
         trigger.appendChild(span);
       } else {
         trigger.classList.remove('placeholder');
@@ -780,42 +771,48 @@
         return;
       }
 
+      const phoneNumber = document.getElementById('phone').value.trim();
       const payload = {
-        sizing: {
-          invoicesPerMonth: Number(document.getElementById('invoices').value),
-          entities: Number(document.getElementById('entities').value),
-        },
-        financialStack: Array.from(selectedStack),
+        firstName: document.getElementById('firstName').value.trim(),
+        lastName: document.getElementById('lastName').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        phone: phoneNumber ? `${document.getElementById('phoneCode').value} ${phoneNumber}` : '',
+        company: document.getElementById('company').value.trim(),
+        jobTitle: document.getElementById('jobTitle').value,
+        country: document.getElementById('country').value,
+        invoicesPerMonth: Number(document.getElementById('invoices').value),
+        entities: Number(document.getElementById('entities').value),
+        financialStack: Array.from(selectedStack).join(', '),
         otherTools: document.getElementById('stackOther').value.trim(),
-        contact: {
-          firstName: document.getElementById('firstName').value.trim(),
-          lastName: document.getElementById('lastName').value.trim(),
-          email: document.getElementById('email').value.trim(),
-          phone: {
-            countryCode: document.getElementById('phoneCode').value,
-            number: document.getElementById('phone').value.trim(),
-          },
-          company: document.getElementById('company').value.trim(),
-          jobTitle: document.getElementById('jobTitle').value,
-          country: document.getElementById('country').value,
-        },
-        setup: {
-          whiteGloveOnboarding: document.getElementById('whiteGlove').checked,
-          financeAiDay: document.getElementById('fde').checked,
-        },
+        whiteGloveOnboarding: document.getElementById('whiteGlove').checked ? 'Yes' : 'No',
+        financeAiDay: document.getElementById('fde').checked ? 'Yes' : 'No',
         message: document.getElementById('message').value.trim(),
         submittedAt: new Date().toISOString(),
       };
 
-      // TODO: replace with real submission (POST to API / DB)
       handleSubmit(payload);
     });
 
-    function handleSubmit(payload) {
-      console.log('Quote request payload:', payload);
-      formView.style.display = 'none';
-      thankYouView.style.display = 'block';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+    const ZAPIER_WEBHOOK_URL = 'https://hooks.zapier.com/hooks/catch/7023140/4ov0i3i/';
+
+    async function handleSubmit(payload) {
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending...';
+      try {
+        await fetch(ZAPIER_WEBHOOK_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          body: new URLSearchParams(payload),
+        });
+        formView.style.display = 'none';
+        thankYouView.style.display = 'block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (err) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Request quote';
+        alert('Something went wrong sending your request. Please try again, or email us at sales@cortena.com.');
+      }
     }
 
     // Clear field errors as user types
