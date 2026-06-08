@@ -369,11 +369,11 @@
     <div id="formView">
 
       <form id="quoteForm" novalidate>
-        <input type="hidden" name="utm_source" />
-        <input type="hidden" name="utm_medium" />
-        <input type="hidden" name="utm_campaign" />
-        <input type="hidden" name="utm_term" />
-        <input type="hidden" name="utm_content" />
+        <input type="hidden" name="utm_source" class="utm_source" />
+        <input type="hidden" name="utm_medium" class="utm_medium" />
+        <input type="hidden" name="utm_campaign" class="utm_campaign" />
+        <input type="hidden" name="utm_term" class="utm_term" />
+        <input type="hidden" name="utm_content" class="utm_content" />
 
         <div class="form-grid">
           <!-- LEFT: Sizing -->
@@ -567,10 +567,11 @@
   </div>
 
   <script>
-    // --- Capture UTM params (URL -> sessionStorage -> hidden inputs) ---
+    // --- Capture UTM params (URL -> sessionStorage -> hidden inputs, scoped to this form) ---
     (function() {
       const utmKeys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
       const url = new URLSearchParams(window.location.search);
+      const formEl = document.getElementById('quoteForm');
       utmKeys.forEach(key => {
         let val = url.get(key);
         if (val) {
@@ -578,8 +579,8 @@
         } else {
           try { val = sessionStorage.getItem(key); } catch (e) {}
         }
-        if (val) {
-          const input = document.querySelector(`input[name="${key}"]`);
+        if (val && formEl) {
+          const input = formEl.querySelector(`input[name="${key}"]`);
           if (input) input.value = val;
         }
       });
@@ -792,11 +793,11 @@
         whiteGloveOnboarding: document.getElementById('whiteGlove').checked ? 'Yes' : 'No',
         financeAiDay: document.getElementById('fde').checked ? 'Yes' : 'No',
         message: document.getElementById('message').value.trim(),
-        utm_source: document.querySelector('input[name="utm_source"]').value,
-        utm_medium: document.querySelector('input[name="utm_medium"]').value,
-        utm_campaign: document.querySelector('input[name="utm_campaign"]').value,
-        utm_term: document.querySelector('input[name="utm_term"]').value,
-        utm_content: document.querySelector('input[name="utm_content"]').value,
+        utm_source: form.querySelector('input[name="utm_source"]').value,
+        utm_medium: form.querySelector('input[name="utm_medium"]').value,
+        utm_campaign: form.querySelector('input[name="utm_campaign"]').value,
+        utm_term: form.querySelector('input[name="utm_term"]').value,
+        utm_content: form.querySelector('input[name="utm_content"]').value,
         submittedAt: new Date().toISOString(),
       };
 
