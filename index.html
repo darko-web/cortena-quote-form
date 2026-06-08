@@ -1,16 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Cortena | Request a Quote</title>
-  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700&display=swap" rel="stylesheet" />
-  <style>
+<style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
       --green: #84B236;
-      --green-soft: rgba(132, 178, 54, 0.4);
       --bg-card: #fafafa;
       --border: #e5e5e5;
       --text: #000;
@@ -18,25 +10,15 @@
       --faint: #999;
     }
 
-    body {
-      font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: var(--green-soft);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      padding: 40px 20px;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-
     .form-card {
+      font-family: inherit;
+      color: var(--text);
       background: #fff;
       border-radius: 12px;
       padding: 48px;
       max-width: 980px;
       width: 100%;
+      margin: 0 auto;
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
     }
 
@@ -382,12 +364,17 @@
       .field-row { grid-template-columns: 1fr; }
     }
   </style>
-</head>
-<body>
+
   <div class="form-card">
     <div id="formView">
 
       <form id="quoteForm" novalidate>
+        <input type="hidden" name="utm_source" />
+        <input type="hidden" name="utm_medium" />
+        <input type="hidden" name="utm_campaign" />
+        <input type="hidden" name="utm_term" />
+        <input type="hidden" name="utm_content" />
+
         <div class="form-grid">
           <!-- LEFT: Sizing -->
           <div>
@@ -580,6 +567,24 @@
   </div>
 
   <script>
+    // --- Capture UTM params (URL -> sessionStorage -> hidden inputs) ---
+    (function() {
+      const utmKeys = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'];
+      const url = new URLSearchParams(window.location.search);
+      utmKeys.forEach(key => {
+        let val = url.get(key);
+        if (val) {
+          try { sessionStorage.setItem(key, val); } catch (e) {}
+        } else {
+          try { val = sessionStorage.getItem(key); } catch (e) {}
+        }
+        if (val) {
+          const input = document.querySelector(`input[name="${key}"]`);
+          if (input) input.value = val;
+        }
+      });
+    })();
+
     // --- Slider value display + fill ---
     const sliders = [
       { id: 'invoices', valueId: 'invoices-value', format: v => Number(v).toLocaleString() + (v >= 10000 ? '+' : '') },
@@ -787,6 +792,11 @@
         whiteGloveOnboarding: document.getElementById('whiteGlove').checked ? 'Yes' : 'No',
         financeAiDay: document.getElementById('fde').checked ? 'Yes' : 'No',
         message: document.getElementById('message').value.trim(),
+        utm_source: document.querySelector('input[name="utm_source"]').value,
+        utm_medium: document.querySelector('input[name="utm_medium"]').value,
+        utm_campaign: document.querySelector('input[name="utm_campaign"]').value,
+        utm_term: document.querySelector('input[name="utm_term"]').value,
+        utm_content: document.querySelector('input[name="utm_content"]').value,
         submittedAt: new Date().toISOString(),
       };
 
@@ -821,5 +831,3 @@
       document.getElementById(id).addEventListener('change', () => setFieldError(id, false));
     });
   </script>
-</body>
-</html>
